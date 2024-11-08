@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
+from os import environ
 from pathlib import Path
+from dotenv import load_dotenv
 
 
 def _log_tqdm():
@@ -40,3 +42,20 @@ def datetime_to_exifdatetime(dt: datetime) -> str:
 
 def datetime_to_exifdate(dt: datetime) -> str:
     return dt.strftime('%Y:%m:%d')
+
+
+# Paths to tools
+load_dotenv()
+
+def magick_path() -> str:
+    return environ.get('MAGICK_PATH', 'magick')
+
+def ffmpeg_path() -> str:
+    return environ.get('FFMPEG_PATH', 'ffmpeg')
+
+def ffprobe_path() -> str:
+    return environ.get('FFPROBE_PATH', 'ffprobe')
+
+def exiftool_path() -> str:
+    return environ.get('EXIFTOOL_PATH', 'exiftool')
+

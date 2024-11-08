@@ -9,14 +9,8 @@ from pathlib import Path
 from tqdm import tqdm
 
 from matsemanns_streetview_tools.gpx import GpxTrack
-from matsemanns_streetview_tools.util import log
+from matsemanns_streetview_tools.util import log, ffmpeg_path
 
-ffmpeg_path = 'ffmpeg'
-
-def set_ffmpeg(path: str) -> None:
-    global ffmpeg_path
-    ffmpeg_path = path
-    # TODO read from env
 
 def calculate_frames_to_keep(
         track: GpxTrack,
@@ -28,9 +22,12 @@ def calculate_frames_to_keep(
     Mainly to be used with a spaced track, to find the correct video frame
     for each point.
 
-    The video_start_time is the (gpx shifted) start time of the video, while the
-    first point to find might be later if there is to be cuts in the beginning of the video.
-    The gpx points should then start from that cut (use the gpx cropper)
+    The video_start_time is the (gpx shifted) start time of the video that the timings
+    of the gpx points will be in relation to (so if video start is 12:00:05, and first
+    gpx point is 12:00:15, the first video frame to keep will be after 10 seconds).
+
+    All points need to be withing the video times, use the gpx cropper first to control
+    what is included from the video.
     """
 
     frames = []
@@ -108,7 +105,7 @@ def save_video_frames(video_file: Path, output_folder: Path, frames: list[int], 
 
     output_pattern = output_folder / f"{video_name}-%6d.jpg"
 
-    ffmpeg_command = [ffmpeg_path,
+    ffmpeg_command = [ffmpeg_path(),
                       "-i", str(video_file.resolve()),
                       "-q:v", str(quality),
                       "-filter_script:v", str(frames_file.resolve()),
@@ -149,7 +146,7 @@ def join_images_to_video(images: list[Path], output_file: Path, metadata_create_
 
     time = metadata_create_time.isoformat().replace("+00:00", "Z")
 
-    ffmpeg_command = [ffmpeg_path,
+    ffmpeg_command = [ffmpeg_path(),
                       "-y",  # file might exist..
                       "-r", str(framerate),
                       "-f", "concat",

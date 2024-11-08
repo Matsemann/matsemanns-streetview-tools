@@ -51,9 +51,8 @@ well suited for automation. Doing this all in code, it's easy to build automagic
 ## Installation
 
 The tool uses ffmpeg and exiftool under the hood, so they need to be installed on the system and in PATH, 
-or point to them through `FFMPEG_HOME` and `EXIFTOOL_HOME` env variables.
-If you want to use the util to create a nadir cap, imagemagick v7 or later needs to be installed as well,
-can point to it using  `MAGICK_PATH` in env.
+or point to them by changing the `.env` file or setting the matching env variables..
+If you want to use the util to create a nadir cap, imagemagick v7 or later needs to be installed as well.
 
 To install the project and python dependencies, [uv](https://docs.astral.sh/uv/) is used. Run `uv sync` to
 install dependencies.

@@ -1,20 +1,13 @@
 import subprocess
-from os import environ
 from pathlib import Path
 from PIL import Image, ImageEnhance, ExifTags
 
 
 from matsemanns_streetview_tools.gpx import GpxPoint
-from matsemanns_streetview_tools.util import log, datetime_to_exifdatetime, datetime_to_exifdate
-
-
-def magick_path() -> None:
-    return environ.get('MAGICK_PATH', 'magick')
+from matsemanns_streetview_tools.util import log, datetime_to_exifdatetime, datetime_to_exifdate, magick_path
 
 
 def create_nadir(input_file: Path, output_file: Path, width: int = 5376, height: int = 588) -> None:
-
-
     cmd = [magick_path(),
            str(input_file.resolve()),
            "-rotate", "180",
@@ -55,7 +48,7 @@ def apply_image_pipeline(img: Image.Image,
         nadir_pos_top = h - n_h
         img.paste(nadir, (0, nadir_pos_top))
 
-    return img  # todo save quality, other quality stuff?
+    return img
 
 def create_exif_data(img: Image.Image, gpx_point: GpxPoint):
     exif_datetime = datetime_to_exifdatetime(gpx_point.utc_time)

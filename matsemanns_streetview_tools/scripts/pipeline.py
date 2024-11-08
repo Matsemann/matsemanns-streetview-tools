@@ -21,7 +21,7 @@ from matsemanns_streetview_tools.video import calculate_frames_to_keep, save_vid
 @dataclass
 class PipelineConfig:
     project_name: str
-    video_files: [str]  # supports globs
+    video_files: list[str]  # supports globs
     original_files_folder: str
     gpx_file: str
     output_folder: str
@@ -77,7 +77,7 @@ def run_pipeline(project_folder: Path, config: PipelineConfig):
     log(f"========================================================")
     log(f"Starting pipeline")
     log(f"{len(video_files)} files found")
-    log(video_files)
+    log(str(video_files))
     log(f"Will save to {output_folder.resolve()}")
     log(f"Config: {config}")
 
@@ -120,6 +120,8 @@ def run_pipeline_on_file(
     # match the gpx file
     video_time_shift = timedelta(seconds=config.video_time_shift_seconds or 0)
     video_original_start = original_metadata.get_embedded_gpx_start_time()
+    if video_original_start is None:
+        raise RuntimeError("Couldn't figure out starttime for file")
     video_start = video_original_start + video_time_shift
     video_end = video_start + equi_metadata.get_duration()
 

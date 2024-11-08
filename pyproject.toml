@@ -10,6 +10,7 @@ dependencies = [
     "pillow>=11.0.0",
     "pyright>=1.1.386",
     "pytest>=8.3.3",
+    "python-dotenv>=1.0.1",
     "spatialmedia",
     "tqdm>=4.66.5",
 ]

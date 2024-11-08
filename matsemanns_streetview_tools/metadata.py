@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
 
-from matsemanns_streetview_tools.util import log, exif_date_to_datetime
+from matsemanns_streetview_tools.util import log, exif_date_to_datetime, ffprobe_path, exiftool_path
 
 
 class ExiftoolMetadata:
@@ -20,7 +20,7 @@ class ExiftoolMetadata:
 
 
 def get_exiftool_metadata(file: Path) -> ExiftoolMetadata:
-    cmd = ["exiftool", "-api", "largefilesupport=1", "-ee", "-j", str(file.resolve())]
+    cmd = [exiftool_path(), "-api", "largefilesupport=1", "-ee", "-j", str(file.resolve())]
     log(f"Running exiftool: {' '.join(cmd)}")
     proc = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -61,7 +61,7 @@ class FfprobeMetadata:
 
 
 def get_ffprobe_metadata(file: Path) -> FfprobeMetadata:
-    cmd = ["ffprobe", "-print_format", "json", "-show_format", "-show_streams", str(file.resolve())]
+    cmd = [ffprobe_path(), "-print_format", "json", "-show_format", "-show_streams", str(file.resolve())]
     log(f"Running ffprobe: {' '.join(cmd)}")
 
     proc = subprocess.run(cmd, capture_output=True, text=True)
