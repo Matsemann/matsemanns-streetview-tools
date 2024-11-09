@@ -151,6 +151,24 @@ Optional fields:
  an enhancement, set it to `null` or remove it instead of `1.0`, since then the step will be skipped entirely saving time.
 * `keep_debug_files`, bool, whether to clean up debug and temp files after it's done.
 
+### Create video from folder of images
+If you already have images tagged with correct exif metadata, this can be used. It creates a video of the images that will
+be accepted by Google, and also creates a matching gpx file of the image locations that should be used when uploading.
+If you want to apply a nadir or tag the images with exif data, read on.
+
+```bash
+ uv run cli.py video-from-folder INPUT_FOLDER OUTPUT FOLDER
+ uv run cli.py video-from-folder /path/to/my/images/ /path/to/place/
+```
+The example will create `images.gpx` and `images.mp4` in the `/path/to/place/` folder.
+
+### Todo: Apply image pipeline on folder
+Can be run on a folder of images to modify the images. Mainly add a nadir cap / logo, but also enhance them if needed.
+
+### Todo: Apply gpx on folder
+If you have a folder of images with no gps location data embedded in the exif, this script will take a gpx file and based
+on the timestamps of the images will figure out where they were taken. The images can then later be uploaded to Mapillary
+and/or joined with the `video-from-folder` script to be uploaded to Google Street View.
 
 ### Create nadir
 ```bash

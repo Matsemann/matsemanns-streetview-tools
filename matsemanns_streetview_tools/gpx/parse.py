@@ -60,18 +60,23 @@ def gpx_track_to_xml(gpx_track: GpxTrack) -> str:
   <trkseg>"""
 
     footer = """
-    </trkseg>
+  </trkseg>
  </trk>
 </gpx>"""
 
 
     def point_to_trkpt(point: GpxPoint) -> str:
+        extensions = ""
+        if point.heading is not None:
+            extensions = f"""
+    <extensions>
+     <heading>{point.heading:.2f}</heading>
+    </extensions>"""
         return f"""
    <trkpt lat="{point.lat:.7f}" lon="{point.lon:.7f}">
     <ele>{point.ele:.1f}</ele>
-    <time>{time_to_gpx_str(point.utc_time)}</time>{f"""
-    <heading>{point.heading}</heading>""" if point.heading is not None else ""}
-   </trkpt>""" # todo fix heading..
+    <time>{time_to_gpx_str(point.utc_time)}</time>{extensions}
+   </trkpt>"""
 
     pts = "".join(point_to_trkpt(p) for p in points)
 

@@ -30,6 +30,17 @@ def get_exiftool_metadata(file: Path) -> ExiftoolMetadata:
     result = proc.stdout
     return ExiftoolMetadata(json.loads(result)[0])
 
+def get_exiftool_metadata_for_images_in_folder(folder: Path) -> list[dict[str, any]]:
+    cmd = [exiftool_path(), "-j", "-n", str(folder.resolve())]
+    log(f"Running exiftool: {' '.join(cmd)}")
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+
+    if proc.returncode != 0:
+        raise RuntimeError("Error from exiftool", proc.stderr)
+
+    result = proc.stdout
+    return json.loads(result)
+
 
 class FfprobeMetadata:
     def __init__(self, data):

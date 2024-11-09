@@ -168,6 +168,12 @@ def test_gpx_track_to_xml():
             lon=Decimal("22.222"),
             ele=Decimal("999"),
             utc_time=datetime(2023, 9, 25, 11, 12, 13, 999, tzinfo=timezone.utc)
+        ),GpxPoint(
+            lat=Decimal("11.111"),
+            lon=Decimal("22.222"),
+            ele=Decimal("999"),
+            heading=Decimal("123.456"),
+            utc_time=datetime(2023, 9, 25, 11, 12, 14, 999, tzinfo=timezone.utc)
         )]
     )
 
@@ -185,6 +191,13 @@ def test_gpx_track_to_xml():
     <ele>999.0</ele>
     <time>2023-09-25T11:12:13.000999Z</time>
    </trkpt>
-    </trkseg>
+   <trkpt lat="11.1110000" lon="22.2220000">
+    <ele>999.0</ele>
+    <time>2023-09-25T11:12:14.000999Z</time>
+    <extensions>
+     <heading>123.46</heading>
+    </extensions>
+   </trkpt>
+  </trkseg>
  </trk>
 </gpx>"""
