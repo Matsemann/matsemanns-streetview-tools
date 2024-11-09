@@ -1,4 +1,5 @@
 # Matsemann's Streetview Tools
+![logo](logo.png)
 
 Utils and a pipeline for taking an equirectangular .360 video and a gpx file, and converting it into an
 output usable for Google Streetview and Mapillary.
