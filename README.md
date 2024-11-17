@@ -80,9 +80,10 @@ uv run cli.py [OPTIONS] COMMAND
 Commands: 
   image
   pipeline
+  google
 ```
 Run with `--help` to see more details, for instance `uv run cli.py image --help` which lists the image commands,
-and then `uv run cli.py image nadir --help` for more details on using the specific sub command.
+and then `uv run cli.py image nadir --help` for example for more details on using the specific sub command.
 
 ### Pipeline
 Main usage of this tool. It takes as input a JSON file close to the video files being worked on
@@ -162,6 +163,34 @@ If you want to apply a nadir or tag the images with exif data, read on.
  uv run cli.py video-from-folder /path/to/my/images/ /path/to/place/
 ```
 The example will create `images.gpx` and `images.mp4` in the `/path/to/place/` folder.
+
+### Upload videos to Google Street View
+TODO document, TODO add automatic upload into the pipeline?
+The videos from the pipeline can be uploaded in Street View Studio, but it's a tedious process
+to choose each video file and gpx and match them up. It's also a second step that needs to be done
+manually sometime after the pipeline is done. Therefore, this tool also supports uploading.
+
+First you need to authorize this application to upload Street View:
+```bash
+uv run cli.py google auth
+```
+Follow the instructions by opening the link in the browser.
+
+Next, can upload one or multiple video files. For each file, it looks for a gpx file with the same name.
+Handles a list of files, so can use globs etc. to upload all files in a folder. 
+```bash
+uv run cli.py google upload /path/to/my/video.mp4
+uv run cli.py google upload /path/to/my/video_1.mp4 /path/to/my/video_2.mp4
+uv run cli.py google upload /path/to/my/*.mp4
+uv run cli.py google upload /path/to/my/video.mp4 --chunk-size=16
+```
+It will upload the (potentially huge) video files in multiple small requests, use `--chunk-size` to control
+how many MiBs per request. Default is 16, and it must be a multiple of 2. Larger is faster, but may time out
+or be blocked by something in your network.
+
+The script handles network issues during an upload, and can recover and resume the upload without having 
+start all over. If there are issues, it will retry for a few minutes, ask google how much we managed to send,
+and continue from there.
 
 ### Todo: Apply image pipeline on folder
 Can be run on a folder of images to modify the images. Mainly add a nadir cap / logo, but also enhance them if needed.

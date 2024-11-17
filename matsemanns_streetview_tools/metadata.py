@@ -1,11 +1,16 @@
 import json
 import subprocess
 from decimal import Decimal
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-from matsemanns_streetview_tools.util import log, exif_date_to_datetime, ffprobe_path, exiftool_path
+from matsemanns_streetview_tools.util import (
+    log,
+    exif_date_to_datetime,
+    ffprobe_path,
+    exiftool_path,
+)
 
 
 class ExiftoolMetadata:
@@ -20,7 +25,14 @@ class ExiftoolMetadata:
 
 
 def get_exiftool_metadata(file: Path) -> ExiftoolMetadata:
-    cmd = [exiftool_path(), "-api", "largefilesupport=1", "-ee", "-j", str(file.resolve())]
+    cmd = [
+        exiftool_path(),
+        "-api",
+        "largefilesupport=1",
+        "-ee",
+        "-j",
+        str(file.resolve()),
+    ]
     log(f"Running exiftool: {' '.join(cmd)}")
     proc = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -29,6 +41,7 @@ def get_exiftool_metadata(file: Path) -> ExiftoolMetadata:
 
     result = proc.stdout
     return ExiftoolMetadata(json.loads(result)[0])
+
 
 def get_exiftool_metadata_for_images_in_folder(folder: Path) -> list[dict[str, any]]:
     cmd = [exiftool_path(), "-j", "-n", str(folder.resolve())]
@@ -50,8 +63,19 @@ class FfprobeMetadata:
         duration = self.data["format"]["duration"]
         return timedelta(seconds=float(duration))
 
+    def get_creation_time(self) -> datetime:
+        creation_time = self.data["format"]["tags"]["creation_time"]
+        return datetime.fromisoformat(creation_time)
+
     def get_video_stream(self):
-        video_stream = next((stream for stream in self.data["streams"] if stream["codec_type"] == "video"), None)
+        video_stream = next(
+            (
+                stream
+                for stream in self.data["streams"]
+                if stream["codec_type"] == "video"
+            ),
+            None,
+        )
 
         if not video_stream:
             raise RuntimeError("No video stream found")
@@ -72,7 +96,14 @@ class FfprobeMetadata:
 
 
 def get_ffprobe_metadata(file: Path) -> FfprobeMetadata:
-    cmd = [ffprobe_path(), "-print_format", "json", "-show_format", "-show_streams", str(file.resolve())]
+    cmd = [
+        ffprobe_path(),
+        "-print_format",
+        "json",
+        "-show_format",
+        "-show_streams",
+        str(file.resolve()),
+    ]
     log(f"Running ffprobe: {' '.join(cmd)}")
 
     proc = subprocess.run(cmd, capture_output=True, text=True)

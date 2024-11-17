@@ -1,3 +1,5 @@
 .venv
 .idea
 ./test_files/
+
+google_credentials.json

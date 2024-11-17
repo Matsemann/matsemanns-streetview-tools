@@ -7,10 +7,14 @@ requires-python = ">=3.12"
 dependencies = [
     "click>=8.1.7",
     "dearpygui>=2.0.0",
+    "google-auth-oauthlib>=1.2.1",
     "pillow>=11.0.0",
+    "pydantic>=2.9.2",
     "pyright>=1.1.386",
     "pytest>=8.3.3",
     "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "ruff>=0.7.4",
     "spatialmedia",
     "tqdm>=4.66.5",
 ]
