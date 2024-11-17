@@ -3,7 +3,7 @@ import subprocess
 from decimal import Decimal
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 from matsemanns_streetview_tools.util import (
     log,
@@ -43,7 +43,7 @@ def get_exiftool_metadata(file: Path) -> ExiftoolMetadata:
     return ExiftoolMetadata(json.loads(result)[0])
 
 
-def get_exiftool_metadata_for_images_in_folder(folder: Path) -> list[dict[str, any]]:
+def get_exiftool_metadata_for_images_in_folder(folder: Path) -> list[dict[str, Any]]:
     cmd = [exiftool_path(), "-j", "-n", str(folder.resolve())]
     log(f"Running exiftool: {' '.join(cmd)}")
     proc = subprocess.run(cmd, capture_output=True, text=True)

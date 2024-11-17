@@ -68,7 +68,7 @@ def authorize():
     log("Additionally, the token is only ever stored on this computer, so you can delete it and revoke access at any time.")  # fmt: skip
     log("Open the link, or press CTRL+C to abort")
 
-    credentials: Credentials = flow.run_local_server()
+    credentials: Credentials = flow.run_local_server()  # type: ignore
 
     _save_credentials(credentials)
 

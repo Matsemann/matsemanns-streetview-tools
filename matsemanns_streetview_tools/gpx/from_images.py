@@ -1,10 +1,11 @@
 from decimal import Decimal
+from typing import Any
 
 from matsemanns_streetview_tools.gpx import GpxTrack, GpxPoint
 from matsemanns_streetview_tools.util import exif_date_to_datetime, log
 
 
-def gpx_from_image_files(exif_data: list[dict[str, any]]) -> tuple[list[str], GpxTrack]:
+def gpx_from_image_files(exif_data: list[dict[str, Any]]) -> tuple[list[str], GpxTrack]:
     sorted_data = sorted(
         exif_data,
         key=lambda d: exif_date_to_datetime(d["GPSDateTime"])

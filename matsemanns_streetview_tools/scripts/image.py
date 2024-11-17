@@ -105,21 +105,7 @@ def show(input_file):
         else:
             dpg.set_value("image", edited_image_data)
 
-    def ops():
-        nonlocal edited_image_data
-        # new_img = pil_image.convert("RGB")
-        # new_img = ImageOps.autocontrast(new_img, cutoff=3, preserve_tone=True)
-        # new_img = new_img.convert("RGBA")
-        new_img = ImageOps.colorize(
-            pil_image,
-        )
-        edited_image_data = [value / 255.0 for value in new_img.tobytes()]
-        dpg.set_value("original", False)
-        dpg.set_value("image", edited_image_data)
-        print("done")
-
     with dpg.window(label="Image editor", width=width + 30, height=height + 290):
-        dpg.add_button(label="ops", callback=ops)
         dpg.add_input_float(
             label="brightness",
             default_value=1.0,
