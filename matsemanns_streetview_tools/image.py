@@ -4,18 +4,31 @@ from PIL import Image, ImageEnhance, ExifTags
 
 
 from matsemanns_streetview_tools.gpx import GpxPoint
-from matsemanns_streetview_tools.util import log, datetime_to_exifdatetime, datetime_to_exifdate, magick_path
+from matsemanns_streetview_tools.util import (
+    log,
+    datetime_to_exifdatetime,
+    datetime_to_exifdate,
+    magick_path,
+)
 
 
-def create_nadir(input_file: Path, output_file: Path, width: int = 5376, height: int = 588) -> None:
-    cmd = [magick_path(),
-           str(input_file.resolve()),
-           "-rotate", "180",
-           "-distort", "DePolar", "0",
-           "-rotate", "180",
-           "-resize", f"{width}x{height}!",
-           str(output_file.resolve())
-           ]
+def create_nadir(
+    input_file: Path, output_file: Path, width: int = 5376, height: int = 588
+) -> None:
+    cmd = [
+        magick_path(),
+        str(input_file.resolve()),
+        "-rotate",
+        "180",
+        "-distort",
+        "DePolar",
+        "0",
+        "-rotate",
+        "180",
+        "-resize",
+        f"{width}x{height}!",
+        str(output_file.resolve()),
+    ]
     log(f"Running magick: {' '.join(cmd)}")
 
     proc = subprocess.run(cmd, capture_output=True, text=True)
@@ -24,13 +37,14 @@ def create_nadir(input_file: Path, output_file: Path, width: int = 5376, height:
         raise RuntimeError("Error from magick", proc.stderr)
 
 
-def apply_image_pipeline(img: Image.Image,
-                         nadir: Image.Image | None = None,
-                         color: float | None = None,
-                         contrast: float | None = None,
-                         brightness: float | None = None,
-                         sharpness: float | None = None,
-                         ) -> Image.Image:
+def apply_image_pipeline(
+    img: Image.Image,
+    nadir: Image.Image | None = None,
+    color: float | None = None,
+    contrast: float | None = None,
+    brightness: float | None = None,
+    sharpness: float | None = None,
+) -> Image.Image:
     if contrast:
         img = ImageEnhance.Contrast(img).enhance(contrast)
     if brightness:
@@ -44,11 +58,14 @@ def apply_image_pipeline(img: Image.Image,
         w, h = img.size
         n_w, n_h = nadir.size
         if w != n_w:
-            log(f"Nadir doesn't cover whole image width, nadir is {n_w}x{n_h}, image is {w}x{h}")
+            log(
+                f"Nadir doesn't cover whole image width, nadir is {n_w}x{n_h}, image is {w}x{h}"
+            )
         nadir_pos_top = h - n_h
         img.paste(nadir, (0, nadir_pos_top))
 
     return img
+
 
 def create_exif_data(img: Image.Image, gpx_point: GpxPoint):
     exif_datetime = datetime_to_exifdatetime(gpx_point.utc_time)
@@ -71,17 +88,24 @@ def create_exif_data(img: Image.Image, gpx_point: GpxPoint):
         ExifTags.GPS.GPSAltitude: round(gpx_point.ele, 7),
         ExifTags.GPS.GPSDestBearingRef: "T",
         ExifTags.GPS.GPSImgDirectionRef: "T",
-        ExifTags.GPS.GPSTimeStamp: (gpx_point.utc_time.hour, gpx_point.utc_time.minute, gpx_point.utc_time.second),
+        ExifTags.GPS.GPSTimeStamp: (
+            gpx_point.utc_time.hour,
+            gpx_point.utc_time.minute,
+            gpx_point.utc_time.second,
+        ),
     }
 
     if gpx_point.heading is not None:
-        gps_data[ExifTags.GPS.GPSDestBearing] = round(gpx_point.heading,2)
-        gps_data[ExifTags.GPS.GPSImgDirection] = round(gpx_point.heading,2) # todo riktig verdi
+        gps_data[ExifTags.GPS.GPSDestBearing] = round(gpx_point.heading, 2)
+        gps_data[ExifTags.GPS.GPSImgDirection] = round(
+            gpx_point.heading, 2
+        )  # todo riktig verdi
 
     # log(str(base_data) + " " + str(gps_data))
     exif = img.getexif()
     exif.update([*base_data.items(), (ExifTags.IFD.GPSInfo, gps_data)])
     return exif
+
 
 def create_xmp_pano_data(img: Image.Image) -> bytes:
     w, h = img.size
@@ -104,7 +128,8 @@ def create_xmp_pano_data(img: Image.Image) -> bytes:
 </x:xmpmeta>
 <?xpacket end='w'?>""")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     create_nadir(
         Path("./test_files/nadir_3k.png"),
         Path("./test_files/nadir_3k_out3.png"),

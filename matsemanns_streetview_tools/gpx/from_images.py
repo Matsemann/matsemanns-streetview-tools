@@ -5,7 +5,12 @@ from matsemanns_streetview_tools.util import exif_date_to_datetime, log
 
 
 def gpx_from_image_files(exif_data: list[dict[str, any]]) -> tuple[list[str], GpxTrack]:
-    sorted_data = sorted(exif_data, key=lambda d: exif_date_to_datetime(d["GPSDateTime"]) if d.get("GPSDateTime") else 0)
+    sorted_data = sorted(
+        exif_data,
+        key=lambda d: exif_date_to_datetime(d["GPSDateTime"])
+        if d.get("GPSDateTime")
+        else 0,
+    )
 
     images = []
     points = []
@@ -21,7 +26,9 @@ def gpx_from_image_files(exif_data: list[dict[str, any]]) -> tuple[list[str], Gp
             continue
 
         if data.get("GPSLatitudeRef") != "N" or data.get("GPSLongitudeRef") != "E":
-            log(f"Can't handle positions in this format, only NE supported, was {data.get("GPSLatitudeRef")}{data.get("GPSLongitudeRef")}, image {img}")
+            log(
+                f"Can't handle positions in this format, only NE supported, was {data.get("GPSLatitudeRef")}{data.get("GPSLongitudeRef")}, image {img}"
+            )
             continue
 
         gps_alt = data.get("GPSAltitude", 0)
@@ -44,14 +51,14 @@ def gpx_from_image_files(exif_data: list[dict[str, any]]) -> tuple[list[str], Gp
         ele = Decimal(gps_alt)
         heading = Decimal(gps_bearing) if gps_bearing is not None else None
 
-        point = GpxPoint(
-            lat=lat, lon=lon, ele=ele, utc_time=time, heading=heading
-        )
+        point = GpxPoint(lat=lat, lon=lon, ele=ele, utc_time=time, heading=heading)
         images.append(img)
         points.append(point)
 
-    track = GpxTrack(name="matsemanns_streetview_tools track from folder of images",
-                     utc_time=points[0].utc_time,
-                     points=points)
+    track = GpxTrack(
+        name="matsemanns_streetview_tools track from folder of images",
+        utc_time=points[0].utc_time,
+        points=points,
+    )
 
     return images, track

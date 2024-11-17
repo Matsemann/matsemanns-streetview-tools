@@ -2,7 +2,7 @@ import itertools
 from pathlib import Path
 
 import click
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 
 from matsemanns_streetview_tools.image import create_nadir, apply_image_pipeline
 
@@ -22,6 +22,7 @@ def nadir(input_file, output_file, width, height):
     """Convert a square image to an equirectangular nadir"""
     create_nadir(Path(input_file), Path(output_file), width, height)
 
+
 @image.command()
 @click.argument("input_file", type=click.Path())
 def test_effects(input_file):
@@ -40,11 +41,15 @@ def test_effects(input_file):
     colors = [1.0, 1.2]
     sharpness = [None]
 
-
-
-    for (con, bri, col, sharp) in itertools.product(contrasts, brightness, colors, sharpness):
-        img2 = apply_image_pipeline(img, contrast=con, color=col, brightness=bri, sharpness=sharp)
-        ImageDraw.Draw(img2).text((0,0), f"con={con},bri={bri},col={col},sharp={sharp}", font_size=50)
+    for con, bri, col, sharp in itertools.product(
+        contrasts, brightness, colors, sharpness
+    ):
+        img2 = apply_image_pipeline(
+            img, contrast=con, color=col, brightness=bri, sharpness=sharp
+        )
+        ImageDraw.Draw(img2).text(
+            (0, 0), f"con={con},bri={bri},col={col},sharp={sharp}", font_size=50
+        )
         img2.save(folder / f"con{con}_bri{bri}_col{col}_sharp{sharp}.jpg", quality=95)
 
 
@@ -57,17 +62,18 @@ def show(input_file):
     Uses dearpygui, if it doesn't work, use the test-effects command instead to generate examples."""
     import dearpygui.dearpygui as dpg
 
-
     pil_image = Image.open(input_file)
     pil_image.putalpha(255)
     org_width, org_height = pil_image.size
-    pil_image = pil_image.resize((org_width//2, org_height//2), Image.Resampling.LANCZOS)
+    pil_image = pil_image.resize(
+        (org_width // 2, org_height // 2), Image.Resampling.LANCZOS
+    )
     width, height = pil_image.size
     image_data = [value / 255.0 for value in pil_image.tobytes()]
     edited_image_data = image_data
 
     dpg.create_context()
-    dpg.create_viewport(title='Custom Title', width=width+50, height=height+300)
+    dpg.create_viewport(title="Custom Title", width=width + 50, height=height + 300)
 
     # Create texture in Dear PyGui
     with dpg.texture_registry():
@@ -82,7 +88,12 @@ def show(input_file):
     def cb(sender):
         nonlocal edited_image_data
         config[sender] = dpg.get_value(sender)
-        new_img = apply_image_pipeline(pil_image, brightness=config["brightness"], contrast=config["contrast"], color=config["color"])
+        new_img = apply_image_pipeline(
+            pil_image,
+            brightness=config["brightness"],
+            contrast=config["contrast"],
+            color=config["color"],
+        )
         edited_image_data = [value / 255.0 for value in new_img.tobytes()]
         dpg.set_value("original", False)
         dpg.set_value("image", edited_image_data)
@@ -94,14 +105,50 @@ def show(input_file):
         else:
             dpg.set_value("image", edited_image_data)
 
-    with dpg.window(label="Image editor", width=width+30, height=height+290):
-        # dpg.add_button(label="Reset")
-        dpg.add_input_float(label="brightness", default_value=1.0, step=0.05, min_value=0.5, max_value=3, callback=cb, tag="brightness")
-        dpg.add_input_float(label="contrast", default_value=1.0, step=0.05, min_value=0.5, max_value=3, callback=cb, tag="contrast")
-        dpg.add_input_float(label="color", default_value=1.0, step=0.05, min_value=0.5, max_value=3, callback=cb, tag="color")
+    def ops():
+        nonlocal edited_image_data
+        # new_img = pil_image.convert("RGB")
+        # new_img = ImageOps.autocontrast(new_img, cutoff=3, preserve_tone=True)
+        # new_img = new_img.convert("RGBA")
+        new_img = ImageOps.colorize(
+            pil_image,
+        )
+        edited_image_data = [value / 255.0 for value in new_img.tobytes()]
+        dpg.set_value("original", False)
+        dpg.set_value("image", edited_image_data)
+        print("done")
+
+    with dpg.window(label="Image editor", width=width + 30, height=height + 290):
+        dpg.add_button(label="ops", callback=ops)
+        dpg.add_input_float(
+            label="brightness",
+            default_value=1.0,
+            step=0.05,
+            min_value=0.5,
+            max_value=3,
+            callback=cb,
+            tag="brightness",
+        )
+        dpg.add_input_float(
+            label="contrast",
+            default_value=1.0,
+            step=0.05,
+            min_value=0.5,
+            max_value=3,
+            callback=cb,
+            tag="contrast",
+        )
+        dpg.add_input_float(
+            label="color",
+            default_value=1.0,
+            step=0.05,
+            min_value=0.5,
+            max_value=3,
+            callback=cb,
+            tag="color",
+        )
         dpg.add_selectable(label="Show original", callback=swap, tag="original")
         dpg.add_image("image")
-
 
     dpg.setup_dearpygui()
     dpg.show_viewport()

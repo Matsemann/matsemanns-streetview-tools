@@ -11,11 +11,19 @@ from PIL import Image
 from tqdm import tqdm
 
 from matsemanns_streetview_tools import gpx, metadata, tracer
-from matsemanns_streetview_tools.gpx import GpxTrack, GpxPoint
-from matsemanns_streetview_tools.image import apply_image_pipeline, create_exif_data, create_xmp_pano_data
+from matsemanns_streetview_tools.gpx import GpxTrack
+from matsemanns_streetview_tools.image import (
+    apply_image_pipeline,
+    create_exif_data,
+    create_xmp_pano_data,
+)
 from matsemanns_streetview_tools.util import log, add_file_logger
-from matsemanns_streetview_tools.video import calculate_frames_to_keep, save_video_frames, join_images_to_video, \
-    inject_spatial_data
+from matsemanns_streetview_tools.video import (
+    calculate_frames_to_keep,
+    save_video_frames,
+    join_images_to_video,
+    inject_spatial_data,
+)
 
 
 @dataclass
@@ -37,7 +45,6 @@ class PipelineConfig:
     nadir: str | None = None
 
 
-
 @click.command()
 @click.argument("json_file", type=click.Path(exists=True, dir_okay=False))
 def pipeline(json_file):
@@ -53,7 +60,6 @@ def pipeline(json_file):
     project_path = json_path.parent
 
     run_pipeline(project_path, config)
-
 
 
 def run_pipeline(project_folder: Path, config: PipelineConfig):
@@ -73,9 +79,9 @@ def run_pipeline(project_folder: Path, config: PipelineConfig):
     # Sort gopro videos by how they're created
     video_files.sort(key=lambda file: (file.stem[4:], file.stem))
 
-    log(f"========================================================")
-    log(f"========================================================")
-    log(f"Starting pipeline")
+    log("========================================================")
+    log("========================================================")
+    log("Starting pipeline")
     log(f"{len(video_files)} files found")
     log(str(video_files))
     log(f"Will save to {output_folder.resolve()}")
@@ -85,8 +91,10 @@ def run_pipeline(project_folder: Path, config: PipelineConfig):
 
     for video_file in tqdm(video_files, desc="Files"):
         try:
-            original_file = project_folder / config.original_files_folder / (video_file.stem + ".360")
-            run_pipeline_on_file(video_file, original_file, gpx_track, output_folder, config, nadir)
+            original_file = project_folder / config.original_files_folder / (video_file.stem + ".360")  # fmt: skip
+            run_pipeline_on_file(
+                video_file, original_file, gpx_track, output_folder, config, nadir
+            )
         except Exception as e:
             failed_videos.append(video_file)
             log(f"ERROR: File {video_file} FAILED due to {e}\n{traceback.format_exc()}")
@@ -97,12 +105,12 @@ def run_pipeline(project_folder: Path, config: PipelineConfig):
 
 
 def run_pipeline_on_file(
-        video_file: Path,
-        original_file: Path,
-        gpx_track: GpxTrack,
-        output_folder: Path,
-        config: PipelineConfig,
-        nadir: Image.Image | None
+    video_file: Path,
+    original_file: Path,
+    gpx_track: GpxTrack,
+    output_folder: Path,
+    config: PipelineConfig,
+    nadir: Image.Image | None,
 ):
     log("====================================")
     log(f"Working on file {video_file.name}")
@@ -133,39 +141,45 @@ def run_pipeline_on_file(
     last_frame = video_end - video_cut_end
     duration = last_frame - first_frame
 
-    log(f"Video gpx starts at {video_original_start}, shifted to {video_start} and ends at {video_end}, duration {equi_metadata.get_duration()}")
-    log(f"First frame will be at {first_frame}, last at {last_frame} for a duration of {duration}")
+    log(f"Video gpx starts at {video_original_start}, shifted to {video_start} and ends at {video_end}, duration {equi_metadata.get_duration()}")  # fmt: skip
+    log(f"First frame will be at {first_frame}, last at {last_frame} for a duration of {duration}")  # fmt: skip
 
     log("Creating the gpx tracks")
     cropped_gpx = gpx.crop_with_interpolation(gpx_track, first_frame, duration)
-    spaced_gpx = gpx.space_out_points(cropped_gpx, spacing_distance_m=Decimal(config.frame_distance_meters))
+    spaced_gpx = gpx.space_out_points(
+        cropped_gpx, spacing_distance_m=Decimal(config.frame_distance_meters)
+    )
 
-    log(f"Gpx for video had {len(cropped_gpx.points)} points, after spacing out every {config.frame_distance_meters}m it's {len(spaced_gpx.points)} points")
+    log(f"Gpx for video had {len(cropped_gpx.points)} points, after spacing out every {config.frame_distance_meters}m it's {len(spaced_gpx.points)} points")  # fmt: skip
 
     # Space each point out 1 second to match the finished video
-    project_final_name = f"{video_file.stem}{"_" if config.project_name else ""}{config.project_name}"
-    video_gpx = gpx.adjust_time(spaced_gpx, first_frame, timedelta(seconds=1))
+    project_final_name = (
+        f"{video_file.stem}{"_" if config.project_name else ""}{config.project_name}"
+    )
+    video_final_creation_time = first_frame.replace(microsecond=0)
+    video_gpx = gpx.adjust_time(
+        spaced_gpx, start_time=video_final_creation_time, delta=timedelta(seconds=1)
+    )
     gpx_out_file = output_folder / f"{project_final_name}.gpx"
     log(f"Writing gpx file to be used with video to {gpx_out_file}")
     gpx_out_file.write_text(gpx.gpx_track_to_xml(video_gpx))
 
     log("Calculating frames to keep")
     frames = calculate_frames_to_keep(
-        spaced_gpx,
-        video_start,
-        video_end,
-        equi_metadata.get_framerate()
+        spaced_gpx, video_start, video_end, equi_metadata.get_framerate()
     )
 
     extract_folder = output_folder / f"{video_file.stem}_extracted"
     log(f"Found {len(frames)} frames to extract, extracting into {extract_folder}")
     with tracer.trace("extract frames"):
-        save_video_frames(video_file, extract_folder, frames, cleanup=not config.keep_debug_files)
-
+        save_video_frames(
+            video_file, extract_folder, frames, cleanup=not config.keep_debug_files
+        )
 
     log("Adding effects and nadir to extracted images")
     saved_frames = [
-        extract_folder / f"{video_file.stem}-{i:06}.jpg" for i, f in enumerate(frames, start=1)
+        extract_folder / f"{video_file.stem}-{i:06}.jpg"
+        for i, f in enumerate(frames, start=1)
     ]
     save_image_folder = output_folder / f"{video_file.stem}"
     if not save_image_folder.exists():
@@ -173,14 +187,22 @@ def run_pipeline_on_file(
 
     new_images = []
 
-    for (image_path, gpx_point) in tqdm(zip(saved_frames, spaced_gpx.points), desc="Applying image pipeline", total=len(saved_frames), leave=True):
+    for image_path, gpx_point in tqdm(
+        zip(saved_frames, spaced_gpx.points),
+        desc="Applying image pipeline",
+        total=len(saved_frames),
+        leave=True,
+    ):
         with tracer.trace("image pipeline"):
             image = Image.open(image_path)
-            updated_image = apply_image_pipeline(image, nadir,
-                                 color=config.color,
-                                 contrast=config.contrast,
-                                 brightness=config.brightness,
-                                 sharpness=config.sharpness)
+            updated_image = apply_image_pipeline(
+                image,
+                nadir,
+                color=config.color,
+                contrast=config.contrast,
+                brightness=config.brightness,
+                sharpness=config.sharpness,
+            )
             exif = create_exif_data(updated_image, gpx_point)
             xmp_data = create_xmp_pano_data(updated_image)
             image_out = save_image_folder / image_path.name
@@ -191,7 +213,13 @@ def run_pipeline_on_file(
     log(f"Joining images back to video, into {tmp_video}")
 
     with tracer.trace("joining images"):
-        join_images_to_video(new_images, tmp_video, metadata_create_time=first_frame, framerate=1, cleanup=not config.keep_debug_files)
+        join_images_to_video(
+            new_images,
+            tmp_video,
+            metadata_create_time=video_final_creation_time,
+            framerate=1,
+            cleanup=not config.keep_debug_files,
+        )
 
     log("Injecting 360 metadata into final video")
     final_video = output_folder / f"{project_final_name}.mp4"
@@ -203,5 +231,6 @@ def run_pipeline_on_file(
         tmp_video.unlink(missing_ok=True)
         shutil.rmtree(extract_folder)
 
-    log(f"Done! Video at {final_video}, gpx file at {gpx_out_file}, images at {save_image_folder}")
-
+    log(
+        f"Done! Video at {final_video}, gpx file at {gpx_out_file}, images at {save_image_folder}"
+    )

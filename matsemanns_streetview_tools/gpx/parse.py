@@ -7,7 +7,6 @@ from xml.etree.ElementTree import Element
 from .types import GpxTrack, GpxPoint
 
 
-
 def parse_gpx(gpx_str: str) -> GpxTrack:
     root = ET.fromstring(gpx_str)
     name = root.find(".//{http://www.topografix.com/GPX/1/1}name")
@@ -22,22 +21,25 @@ def parse_gpx(gpx_str: str) -> GpxTrack:
         time: Element | None = trkpt.find(".{http://www.topografix.com/GPX/1/1}time")
 
         assert time is not None and time.text
-        utc_time = datetime.fromisoformat(time.text.replace("Z", "+00:00")).astimezone(timezone.utc)
+        utc_time = datetime.fromisoformat(time.text.replace("Z", "+00:00")).astimezone(
+            timezone.utc
+        )
 
         points.append(
             GpxPoint(
                 lat=Decimal(lat),
                 lon=Decimal(lon),
                 ele=Decimal(ele.text) if ele is not None and ele.text else Decimal(0),
-                utc_time=utc_time
+                utc_time=utc_time,
             )
         )
 
     return GpxTrack(
         name=name.text if name is not None and name.text else "",
         utc_time=points[0].utc_time,
-        points=points
+        points=points,
     )
+
 
 def read_gpx_file(file: Path) -> GpxTrack:
     gpx_str = file.read_text()
@@ -46,6 +48,7 @@ def read_gpx_file(file: Path) -> GpxTrack:
 
 def gpx_track_to_xml(gpx_track: GpxTrack) -> str:
     points: list[GpxPoint] = gpx_track.points
+
     def time_to_gpx_str(utc_time: datetime) -> str:
         return utc_time.isoformat().replace("+00:00", "Z")
 
@@ -64,7 +67,6 @@ def gpx_track_to_xml(gpx_track: GpxTrack) -> str:
  </trk>
 </gpx>"""
 
-
     def point_to_trkpt(point: GpxPoint) -> str:
         extensions = ""
         if point.heading is not None:
@@ -81,4 +83,3 @@ def gpx_track_to_xml(gpx_track: GpxTrack) -> str:
     pts = "".join(point_to_trkpt(p) for p in points)
 
     return header + pts + footer
-

@@ -1,7 +1,12 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from matsemanns_streetview_tools.gpx import parse_gpx, GpxTrack, GpxPoint, gpx_track_to_xml
+from matsemanns_streetview_tools.gpx import (
+    parse_gpx,
+    GpxTrack,
+    GpxPoint,
+    gpx_track_to_xml,
+)
 
 test_track = """<?xml version="1.0" encoding="UTF-8"?>
 <gpx creator="StravaGPX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3">
@@ -163,22 +168,27 @@ def test_gpx_track_to_xml():
     track = GpxTrack(
         name="test track",
         utc_time=datetime(2023, 9, 25, 11, 12, 13, 999, tzinfo=timezone.utc),
-        points=[GpxPoint(
-            lat=Decimal("11.111"),
-            lon=Decimal("22.222"),
-            ele=Decimal("999"),
-            utc_time=datetime(2023, 9, 25, 11, 12, 13, 999, tzinfo=timezone.utc)
-        ),GpxPoint(
-            lat=Decimal("11.111"),
-            lon=Decimal("22.222"),
-            ele=Decimal("999"),
-            heading=Decimal("123.456"),
-            utc_time=datetime(2023, 9, 25, 11, 12, 14, 999, tzinfo=timezone.utc)
-        )]
+        points=[
+            GpxPoint(
+                lat=Decimal("11.111"),
+                lon=Decimal("22.222"),
+                ele=Decimal("999"),
+                utc_time=datetime(2023, 9, 25, 11, 12, 13, 999, tzinfo=timezone.utc),
+            ),
+            GpxPoint(
+                lat=Decimal("11.111"),
+                lon=Decimal("22.222"),
+                ele=Decimal("999"),
+                heading=Decimal("123.456"),
+                utc_time=datetime(2023, 9, 25, 11, 12, 14, 999, tzinfo=timezone.utc),
+            ),
+        ],
     )
 
     xml = gpx_track_to_xml(track)
-    assert xml == """<?xml version="1.0" encoding="UTF-8"?>
+    assert (
+        xml
+        == """<?xml version="1.0" encoding="UTF-8"?>
 <gpx creator="StravaGPX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3">
  <metadata>
   <time>2023-09-25T11:12:13.000999Z</time>
@@ -201,3 +211,4 @@ def test_gpx_track_to_xml():
   </trkseg>
  </trk>
 </gpx>"""
+    )

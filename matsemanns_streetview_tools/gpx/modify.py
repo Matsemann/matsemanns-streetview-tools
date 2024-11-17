@@ -3,10 +3,18 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from . import GpxTrack
-from ._math import relative_distance, eucl, intersect_line_with_circle, interpolate_gpx_points, get_angle_degrees
+from ._math import (
+    relative_distance,
+    eucl,
+    intersect_line_with_circle,
+    interpolate_gpx_points,
+    get_angle_degrees,
+)
 
 
-def crop_with_interpolation(track: GpxTrack, start_time: datetime, duration: timedelta) -> GpxTrack:
+def crop_with_interpolation(
+    track: GpxTrack, start_time: datetime, duration: timedelta
+) -> GpxTrack:
     """Takes a GpxTrack, and crops it so that it starts and ends the given time.
     If the times don't match exactly a point in the track, it will be interpolated between
      the points before and after."""
@@ -14,12 +22,16 @@ def crop_with_interpolation(track: GpxTrack, start_time: datetime, duration: tim
     end_time = start_time + duration
 
     if track.points[0].utc_time > end_time or track.points[-1].utc_time < start_time:
-        raise RuntimeError(f"No overlap between gpx and time period. "
-                           f"Gpx: {track.points[0].utc_time}-{track.points[-1].utc_time} "
-                           f"Crop time: {start_time}-{end_time}")
+        raise RuntimeError(
+            f"No overlap between gpx and time period. "
+            f"Gpx: {track.points[0].utc_time}-{track.points[-1].utc_time} "
+            f"Crop time: {start_time}-{end_time}"
+        )
 
     # Find first point in track after the start time
-    first_index, first_point = next((i, p) for i, p in enumerate(track.points) if p.utc_time >= start_time)
+    first_index, first_point = next(
+        (i, p) for i, p in enumerate(track.points) if p.utc_time >= start_time
+    )
 
     if first_index == 0 or first_point.utc_time == start_time:
         # just keep point as is
@@ -29,14 +41,19 @@ def crop_with_interpolation(track: GpxTrack, start_time: datetime, duration: tim
         # interpolate between two points
         prev_point = track.points[first_index - 1]
         prev_to_start = Decimal((start_time - prev_point.utc_time).total_seconds())
-        prev_to_point = Decimal((first_point.utc_time - prev_point.utc_time).total_seconds())
-        fraction = (prev_to_start / prev_to_point)
+        prev_to_point = Decimal(
+            (first_point.utc_time - prev_point.utc_time).total_seconds()
+        )
+        fraction = prev_to_start / prev_to_point
 
         start_point = interpolate_gpx_points(prev_point, first_point, fraction)
         start_index = first_index  # as the point we found should be included later
 
     # Find first point in track after the end time
-    last_index, last_point = next(((i, p) for i, p in enumerate(track.points) if p.utc_time >= end_time), (None, None))
+    last_index, last_point = next(
+        ((i, p) for i, p in enumerate(track.points) if p.utc_time >= end_time),
+        (None, None),
+    )
 
     if last_index is None or last_point is None:
         # Gpx track ends before, just keep end point
@@ -51,19 +68,17 @@ def crop_with_interpolation(track: GpxTrack, start_time: datetime, duration: tim
         # interpolate between two points
         prev_point = track.points[last_index - 1]
         prev_to_end = Decimal((end_time - prev_point.utc_time).total_seconds())
-        prev_to_point = Decimal((last_point.utc_time - prev_point.utc_time).total_seconds())
-        fraction = (prev_to_end / prev_to_point)
+        prev_to_point = Decimal(
+            (last_point.utc_time - prev_point.utc_time).total_seconds()
+        )
+        fraction = prev_to_end / prev_to_point
 
         end_point = interpolate_gpx_points(prev_point, last_point, fraction)
         end_index = last_index  # the point found shouldn't be included
 
     points = [start_point] + track.points[start_index:end_index] + [end_point]
 
-    return GpxTrack(
-        name=track.name,
-        utc_time=points[0].utc_time,
-        points=points
-    )
+    return GpxTrack(name=track.name, utc_time=points[0].utc_time, points=points)
 
 
 def space_out_points(track: GpxTrack, spacing_distance_m: Decimal) -> GpxTrack:
@@ -109,7 +124,9 @@ def space_out_points(track: GpxTrack, spacing_distance_m: Decimal) -> GpxTrack:
         # So figure out exactly when between the last two points we actually
         # were the correct distance away
         prevx, prevy = relative_distance(current_point, prev_point)
-        t1, t2 = intersect_line_with_circle((prevx, prevy), (posx, posy), spacing_distance_m)
+        t1, t2 = intersect_line_with_circle(
+            (prevx, prevy), (posx, posy), spacing_distance_m
+        )
         t = t1  # if 0 <= t1 <= 1 else t2, think t1 is always what we want no matter what..
 
         my_point = interpolate_gpx_points(prev_point, point, t)
@@ -127,9 +144,7 @@ def space_out_points(track: GpxTrack, spacing_distance_m: Decimal) -> GpxTrack:
         points.insert(0, point)
 
     return GpxTrack(
-        name=track.name,
-        utc_time=new_track_points[0].utc_time,
-        points=new_track_points
+        name=track.name, utc_time=new_track_points[0].utc_time, points=new_track_points
     )
 
 
@@ -147,10 +162,8 @@ def adjust_time(track: GpxTrack, start_time: datetime, delta: timedelta) -> GpxT
         new_point = dataclasses.replace(point, utc_time=new_time)
         points.append(new_point)
 
-    return dataclasses.replace(
-        track,
-        utc_time=start_time,
-        points=points)
+    return dataclasses.replace(track, utc_time=start_time, points=points)
+
 
 # with open("../test_files/garmin.gpx") as file:
 #     gpx_content = file.read()

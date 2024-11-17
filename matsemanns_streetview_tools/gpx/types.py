@@ -11,6 +11,7 @@ class GpxPoint:
     utc_time: datetime
     heading: Decimal | None = None
 
+
 @dataclass
 class GpxTrack:
     name: str

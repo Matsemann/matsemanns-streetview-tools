@@ -1,5 +1,4 @@
 from pathlib import Path
-from traceback import print_stack
 
 import click
 

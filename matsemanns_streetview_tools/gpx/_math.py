@@ -22,11 +22,12 @@ def relative_distance(origin: GpxPoint, point: GpxPoint) -> tuple[Decimal, Decim
 
 
 def eucl(x, y):
-    return math.sqrt(x ** 2 + y ** 2)
+    return math.sqrt(x**2 + y**2)
 
 
-def intersect_line_with_circle(p1: tuple[Decimal, Decimal], p2: tuple[Decimal, Decimal], radius: Decimal) -> tuple[
-    Decimal, Decimal]:
+def intersect_line_with_circle(
+    p1: tuple[Decimal, Decimal], p2: tuple[Decimal, Decimal], radius: Decimal
+) -> tuple[Decimal, Decimal]:
     """Figure out where a line between the two points intersect with a
     circle with center at origin.
 
@@ -39,9 +40,9 @@ def intersect_line_with_circle(p1: tuple[Decimal, Decimal], p2: tuple[Decimal, D
     # https://math.stackexchange.com/a/311956/28786
     a = (p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2
     b = 2 * (p2[0] - p1[0]) * p1[0] + 2 * (p2[1] - p1[1]) * p1[1]
-    c = p1[0] ** 2 + p1[1] ** 2 - radius ** 2
+    c = p1[0] ** 2 + p1[1] ** 2 - radius**2
 
-    b24ac = (b ** 2 - 4 * a * c).sqrt()
+    b24ac = (b**2 - 4 * a * c).sqrt()
 
     t1 = (-b + b24ac) / (2 * a)
     t2 = (-b - b24ac) / (2 * a)
@@ -54,19 +55,21 @@ def interpolate_value(start: Decimal, end: Decimal, fraction: Decimal) -> Decima
     return start + (end - start) * fraction
 
 
-def interpolate_gpx_points(start: GpxPoint, end: GpxPoint, fraction: Decimal) -> GpxPoint:
-    timei = interpolate_value(Decimal(start.utc_time.timestamp()), Decimal(end.utc_time.timestamp()), fraction)
+def interpolate_gpx_points(
+    start: GpxPoint, end: GpxPoint, fraction: Decimal
+) -> GpxPoint:
+    timei = interpolate_value(
+        Decimal(start.utc_time.timestamp()), Decimal(end.utc_time.timestamp()), fraction
+    )
 
     return GpxPoint(
         lat=interpolate_value(start.lat, end.lat, fraction),
         lon=interpolate_value(start.lon, end.lon, fraction),
         ele=interpolate_value(start.ele, end.ele, fraction),
-        utc_time=datetime.fromtimestamp(float(timei), tz=timezone.utc)
+        utc_time=datetime.fromtimestamp(float(timei), tz=timezone.utc),
     )
 
 
 def get_angle_degrees(x: Decimal, y: Decimal) -> Decimal:
     """0-360, where 0 is north/up"""
-    return (Decimal(
-        math.degrees(math.atan2(x, y))
-    ) + 360) % 360
+    return (Decimal(math.degrees(math.atan2(x, y))) + 360) % 360

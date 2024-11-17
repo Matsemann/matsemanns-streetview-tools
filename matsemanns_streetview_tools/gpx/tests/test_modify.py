@@ -5,51 +5,53 @@ from pytest import approx, raises
 
 from matsemanns_streetview_tools.gpx import GpxPoint, GpxTrack
 from matsemanns_streetview_tools.gpx._math import relative_distance, eucl
-from matsemanns_streetview_tools.gpx.modify import crop_with_interpolation, space_out_points, adjust_time
+from matsemanns_streetview_tools.gpx.modify import (
+    crop_with_interpolation,
+    space_out_points,
+    adjust_time,
+)
 from matsemanns_streetview_tools.gpx.tests.test_utils import gpx_point
 
 
 def test_crop_with_interpolation():
     start_time = datetime(2023, 9, 27, 15, 19, 0, tzinfo=timezone.utc)
 
-    points = [GpxPoint(
-        lat=Decimal(1),
-        lon=Decimal(11),
-        ele=Decimal(1001),
-        utc_time=start_time
-    ), GpxPoint(
-        lat=Decimal(2),
-        lon=Decimal(12),
-        ele=Decimal(1002),
-        utc_time=start_time + timedelta(seconds=5)
-    ), GpxPoint(
-        lat=Decimal(3),
-        lon=Decimal(13),
-        ele=Decimal(1003),
-        utc_time=start_time + timedelta(seconds=10)
-    ), GpxPoint(
-        lat=Decimal(4),
-        lon=Decimal(14),
-        ele=Decimal(1004),
-        utc_time=start_time + timedelta(seconds=15)
-    ), GpxPoint(
-        lat=Decimal(5),
-        lon=Decimal(15),
-        ele=Decimal(1005),
-        utc_time=start_time + timedelta(seconds=20)
-    )]
+    points = [
+        GpxPoint(
+            lat=Decimal(1), lon=Decimal(11), ele=Decimal(1001), utc_time=start_time
+        ),
+        GpxPoint(
+            lat=Decimal(2),
+            lon=Decimal(12),
+            ele=Decimal(1002),
+            utc_time=start_time + timedelta(seconds=5),
+        ),
+        GpxPoint(
+            lat=Decimal(3),
+            lon=Decimal(13),
+            ele=Decimal(1003),
+            utc_time=start_time + timedelta(seconds=10),
+        ),
+        GpxPoint(
+            lat=Decimal(4),
+            lon=Decimal(14),
+            ele=Decimal(1004),
+            utc_time=start_time + timedelta(seconds=15),
+        ),
+        GpxPoint(
+            lat=Decimal(5),
+            lon=Decimal(15),
+            ele=Decimal(1005),
+            utc_time=start_time + timedelta(seconds=20),
+        ),
+    ]
 
-    track = GpxTrack(
-        name="test track",
-        utc_time=start_time,
-        points=points
-    )
+    track = GpxTrack(name="test track", utc_time=start_time, points=points)
 
     # Crop exactly everything, exact:
     crop = crop_with_interpolation(
-        track,
-        start_time=start_time,
-        duration=timedelta(seconds=20))
+        track, start_time=start_time, duration=timedelta(seconds=20)
+    )
     assert len(crop.points) == 5
     assert crop.points[0] == points[0]
     assert crop.points[4] == points[4]
@@ -58,7 +60,8 @@ def test_crop_with_interpolation():
     crop = crop_with_interpolation(
         track,
         start_time=start_time + timedelta(seconds=5),
-        duration=timedelta(seconds=10))
+        duration=timedelta(seconds=10),
+    )
     assert len(crop.points) == 3
     assert crop.points[0] == points[1]
     assert crop.points[2] == points[3]
@@ -69,7 +72,8 @@ def test_crop_with_interpolation():
     crop = crop_with_interpolation(
         track,
         start_time=start_time + timedelta(seconds=-10),
-        duration=timedelta(seconds=17.5))
+        duration=timedelta(seconds=17.5),
+    )
     assert len(crop.points) == 3
     assert crop.points[0] == points[0]
     assert crop.points[1] == points[1]
@@ -82,7 +86,8 @@ def test_crop_with_interpolation():
     crop = crop_with_interpolation(
         track,
         start_time=start_time + timedelta(seconds=2.5),
-        duration=timedelta(seconds=100))
+        duration=timedelta(seconds=100),
+    )
     assert len(crop.points) == 5
     assert crop.points[0].lat == Decimal("1.5")
     assert crop.points[4] == points[4]
@@ -92,9 +97,8 @@ def test_crop_with_interpolation():
         crop_with_interpolation(
             track,
             start_time=start_time - timedelta(seconds=100),
-            duration=timedelta(seconds=90)
+            duration=timedelta(seconds=90),
         )
-
 
 
 def test_space_out_points():
@@ -113,7 +117,7 @@ def test_space_out_points():
                 lat=lat + (i * diff),
                 lon=lon,
                 ele=Decimal(0),
-                utc_time=start_time + timedelta(seconds=i)
+                utc_time=start_time + timedelta(seconds=i),
             )
         )
 
@@ -148,9 +152,7 @@ def test_space_out_points_correct_heading():
     point4 = gpx_point(lon=10 * one_meter, lat=6 * one_meter)
 
     track = GpxTrack(
-        name="dummy",
-        utc_time=point1.utc_time,
-        points=[point1, point2, point3, point4]
+        name="dummy", utc_time=point1.utc_time, points=[point1, point2, point3, point4]
     )
 
     new_track = space_out_points(track, spacing_distance_m=Decimal("5"))
@@ -176,17 +178,18 @@ def test_adjust_time():
         points=[
             gpx_point(utc_time=datetime(2023, 1, 1, 1, 1, 1, 1, tzinfo=timezone.utc)),
             gpx_point(utc_time=datetime(2023, 1, 2, 1, 1, 1, 1, tzinfo=timezone.utc)),
-            gpx_point(utc_time=datetime(2023, 1, 3, 1, 1, 1, 1, tzinfo=timezone.utc))
-        ]
+            gpx_point(utc_time=datetime(2023, 1, 3, 1, 1, 1, 1, tzinfo=timezone.utc)),
+        ],
     )
 
-    new_track = adjust_time(
-        track=track,
-        start_time=start_time,
-        delta=delta
+    new_track = adjust_time(track=track, start_time=start_time, delta=delta)
+
+    assert new_track.points[0].utc_time == datetime(
+        2023, 9, 27, 15, 19, 33, 0, tzinfo=timezone.utc
     )
-
-    assert new_track.points[0].utc_time == datetime(2023, 9, 27, 15, 19, 33, 0, tzinfo=timezone.utc)
-    assert new_track.points[1].utc_time == datetime(2023, 9, 27, 15, 19, 33, 200_000, tzinfo=timezone.utc)
-    assert new_track.points[2].utc_time == datetime(2023, 9, 27, 15, 19, 33, 400_000, tzinfo=timezone.utc)
-
+    assert new_track.points[1].utc_time == datetime(
+        2023, 9, 27, 15, 19, 33, 200_000, tzinfo=timezone.utc
+    )
+    assert new_track.points[2].utc_time == datetime(
+        2023, 9, 27, 15, 19, 33, 400_000, tzinfo=timezone.utc
+    )

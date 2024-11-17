@@ -1,9 +1,7 @@
 import json
 import os
 import time
-from dataclasses import dataclass
 from datetime import timedelta
-from decimal import Decimal
 from pathlib import Path
 
 import requests
@@ -15,10 +13,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from base64 import urlsafe_b64decode
 
 from pydantic import BaseModel
-from requests import Response, Session
+from requests import Session
 from tqdm import tqdm
 
-from matsemanns_streetview_tools import metadata, gpx
+from matsemanns_streetview_tools import metadata
 from matsemanns_streetview_tools.gpx import GpxTrack
 from matsemanns_streetview_tools.util import log
 
@@ -107,7 +105,7 @@ def upload_streetview_video(
     _chunk_upload_video(session, credentials, video, upload_url, chunk_size_mib)
 
     # Tell google this should be a streetview together with the gps data
-    log(f"Step 3/3: Attaching gps data to the uploaded video and publishing")
+    log("Step 3/3: Attaching gps data to the uploaded video and publishing")
     _create_street_view_photosequence(session, credentials, gps_points, upload_url)
 
     log(f"Successfully uploaded {video}")
@@ -126,7 +124,7 @@ def _get_upload_url(session: Session, credentials: Credentials) -> str:
     except Exception as err:
         log(f"ERROR: Something went wrong, {err}")
         log(
-            f"If the error is 401 or 403, check if the token is valid or authorize again"
+            "If the error is 401 or 403, check if the token is valid or authorize again"
         )
         raise err
 

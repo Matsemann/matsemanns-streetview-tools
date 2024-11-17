@@ -250,6 +250,8 @@ Here follows an explanation of the various functionality and how it can be used:
 ```bash
 uv run pytest matsemanns_streetview_tools/
 uv run pyright matsemanns_streetview_tools/ # optionally with -w
+uv run ruff check --fix matsemanns_streetview_tools/
+uv run ruff format matsemanns_streetview_tools/
 ```
 
 ## Acks
