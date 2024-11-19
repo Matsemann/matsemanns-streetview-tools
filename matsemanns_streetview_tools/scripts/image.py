@@ -2,7 +2,7 @@ import itertools
 from pathlib import Path
 
 import click
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw
 
 from matsemanns_streetview_tools.image import create_nadir, apply_image_pipeline
 

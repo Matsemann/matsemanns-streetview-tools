@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import click
+from tqdm import tqdm
 
 import matsemanns_streetview_tools.google_street_view as gsv
 from matsemanns_streetview_tools import gpx
@@ -41,7 +42,7 @@ def upload(input_files, chunk_size):
 
     failed_videos = []
 
-    for file in input_files:
+    for file in tqdm(input_files, desc="Files", leave=True):
         log(f"Uploading {file}")
         video = Path(file)
         gpx_path = video.parent / f"{video.stem}.gpx"

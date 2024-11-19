@@ -25,6 +25,7 @@ test_track = """<?xml version="1.0" encoding="UTF-8"?>
       <gpxtpx:atemp>29</gpxtpx:atemp>
       <gpxtpx:hr>162</gpxtpx:hr>
      </gpxtpx:TrackPointExtension>
+     <heading>359.99</heading>
     </extensions>
    </trkpt>
    <trkpt lat="59.9298880" lon="10.7919170">
@@ -162,6 +163,7 @@ def test_parse_gpx():
     assert gpx_track.points[0].lat == Decimal("59.9298520")
     assert gpx_track.points[0].lon == Decimal("10.7918700")
     assert gpx_track.points[0].ele == Decimal("111.4")
+    assert gpx_track.points[0].heading == Decimal("359.99")
 
 
 def test_gpx_track_to_xml():

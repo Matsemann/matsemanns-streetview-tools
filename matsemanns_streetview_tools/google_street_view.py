@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
 from pathlib import Path
 
 import requests
@@ -18,6 +18,7 @@ from tqdm import tqdm
 
 from matsemanns_streetview_tools import metadata
 from matsemanns_streetview_tools.gpx import GpxTrack
+from matsemanns_streetview_tools.metadata import FfprobeMetadata
 from matsemanns_streetview_tools.util import log
 
 # No way to avoid publishing this for a public desktop client, even the hidden value.
@@ -89,7 +90,8 @@ def upload_streetview_video(
     credentials = _get_user_credentials()
 
     # Sanity check the metadata, the gpx should cover the video
-    _verify_valid_gpx_for_video(video, gpx_track)
+    video_metadata = metadata.get_ffprobe_metadata(video)
+    _verify_valid_gpx_for_video(video_metadata, gpx_track)
     gps_points = _create_google_gps_data_from_gpx(gpx_track)
 
     # We don't use default headers in the session, instead make sure we have an up-to-date token each request, as this
@@ -106,7 +108,9 @@ def upload_streetview_video(
 
     # Tell google this should be a streetview together with the gps data
     log("Step 3/3: Attaching gps data to the uploaded video and publishing")
-    _create_street_view_photosequence(session, credentials, gps_points, upload_url)
+    _create_street_view_photosequence(
+        session, credentials, gps_points, video_metadata.get_creation_time(), upload_url
+    )
 
     log(f"Successfully uploaded {video}")
 
@@ -225,8 +229,9 @@ def _resume_upload(credentials, resumable_url, session) -> int:
     raise RuntimeError("Out of attempts to resume the upload")
 
 
-def _verify_valid_gpx_for_video(video: Path, gpx_track: GpxTrack) -> None:
-    video_metadata = metadata.get_ffprobe_metadata(video)
+def _verify_valid_gpx_for_video(
+    video_metadata: FfprobeMetadata, gpx_track: GpxTrack
+) -> None:
     video_start = video_metadata.get_creation_time()
     video_end = video_start + video_metadata.get_duration()
 
@@ -265,6 +270,7 @@ class PhotoSequenceRequest(BaseModel):
     uploadReference: UploadReference
     rawGpsTimeline: list[Pose]
     gpsSource: str
+    captureTimeOverride: str
 
 
 def _create_google_gps_data_from_gpx(gpx_track: GpxTrack) -> list[Pose]:
@@ -282,8 +288,11 @@ def _create_google_gps_data_from_gpx(gpx_track: GpxTrack) -> list[Pose]:
                     # "%Y-%m-%dT%H:%M:%S.%fZ" # TODO reactivate
                     "%Y-%m-%dT%H:%M:%SZ"
                 ),
+                # TODO make configurable if we include these or let google decide?
                 heading=float(point.heading) if point.heading is not None else None,
-                # TODO heading is not parsed from gpx file at the moment
+                # We know it's horizon leveled
+                pitch=0,
+                roll=0,
             )
         )
 
@@ -294,12 +303,14 @@ def _create_street_view_photosequence(
     session: Session,
     credentials: Credentials,
     gps_data: list[Pose],
+    video_start_time: datetime,
     upload_url: str,
 ) -> None:
     sequence_request = PhotoSequenceRequest(
         uploadReference=UploadReference(uploadUrl=upload_url),
         rawGpsTimeline=gps_data,
         gpsSource="PHOTO_SEQUENCE",
+        captureTimeOverride=video_start_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
     )
     res = session.post(
         "https://streetviewpublish.googleapis.com/v1/photoSequence",
@@ -310,4 +321,5 @@ def _create_street_view_photosequence(
     )
     res.raise_for_status()
     sequence_id = res.json()["name"]
+    # log(sequence_request.model_dump_json())
     log(f"Completed, saved as {sequence_id}")

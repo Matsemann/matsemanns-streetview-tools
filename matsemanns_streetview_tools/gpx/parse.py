@@ -19,6 +19,9 @@ def parse_gpx(gpx_str: str) -> GpxTrack:
         lon = trkpt.attrib["lon"]
         ele: Element | None = trkpt.find(".{http://www.topografix.com/GPX/1/1}ele")
         time: Element | None = trkpt.find(".{http://www.topografix.com/GPX/1/1}time")
+        heading: Element | None = trkpt.find(
+            "./{http://www.topografix.com/GPX/1/1}extensions/{http://www.topografix.com/GPX/1/1}heading"
+        )  # TODO perhaps namespace it better
 
         assert time is not None and time.text
         utc_time = datetime.fromisoformat(time.text.replace("Z", "+00:00")).astimezone(
@@ -31,6 +34,9 @@ def parse_gpx(gpx_str: str) -> GpxTrack:
                 lon=Decimal(lon),
                 ele=Decimal(ele.text) if ele is not None and ele.text else Decimal(0),
                 utc_time=utc_time,
+                heading=Decimal(heading.text)
+                if heading is not None and heading.text
+                else None,
             )
         )
 
